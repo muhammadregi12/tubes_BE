@@ -1,11 +1,10 @@
-import hre from "hardhat";
+// scripts/deploy.js
+import hardhat from "hardhat";
+const { ethers } = hardhat;
 
 async function main() {
-  const iuran = hre.ethers.utils.parseEther("0.01"); // iuran 0.01 ETH
-  const periode = 30; // periode 30 hari
-
-  const Arisan = await hre.ethers.getContractFactory("Arisan");
-  const arisan = await Arisan.deploy(iuran, periode);
+  const Arisan = await ethers.getContractFactory("Arisan");
+  const arisan = await Arisan.deploy(); // ✅ TANPA parameter!
 
   await arisan.deployed();
 
@@ -13,6 +12,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error("❌ Deployment error:", error);
   process.exitCode = 1;
 });

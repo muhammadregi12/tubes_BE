@@ -29,9 +29,11 @@ contract Arisan {
         require(msg.sender == admin, "Only admin");
         require(allPaid(), "Not all paid");
 
-        uint winnerIndex = uint(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % participants.length;
-        lastWinner = participants[winnerIndex];
+        uint winnerIndex = uint(
+            keccak256(abi.encodePacked(block.timestamp, block.prevrandao))
+        ) % participants.length;
 
+        lastWinner = participants[winnerIndex];
         payable(lastWinner).transfer(address(this).balance);
 
         for (uint i = 0; i < participants.length; i++) {
