@@ -15,8 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('group_id')->constrained('arisan_groups')->onDelete('cascade');
-            $table->date('joined')->nullable();
-            $table->enum('status', ['aktif', 'keluar'])->default('aktif');
             $table->timestamps();
         });
     }

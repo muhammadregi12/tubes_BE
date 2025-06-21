@@ -16,5 +16,9 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::resource('/arisanGroup', ArisanGroupController::class);
+    Route::post('/joinArisan', [ArisanGroupController::class, 'joinByCode']);
+
+    // contrack addres
+    Route::post('/arisan-groups/{id}/save-contract', [ArisanGroupController::class, 'saveContractAddress']);
 });
 

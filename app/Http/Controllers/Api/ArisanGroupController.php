@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\arisan_group;
+use App\Models\arisan_participant;
+// use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ArisanGroupController extends Controller
@@ -56,6 +59,7 @@ class ArisanGroupController extends Controller
                 'message' => $validator->errors()
             ], 422);
         }
+        
 
         $arisanGroups = new arisan_group();
         $arisanGroups->name = $request->name;
@@ -64,7 +68,13 @@ class ArisanGroupController extends Controller
         $arisanGroups->duration = $request->duration;
         $arisanGroups->start_date = $request->start_date;
         $arisanGroups->end_date = $request->end_date;
+        $arisanGroups->user_id = Auth::user()->id;
         $arisanGroups->save();
+
+        arisan_participant::create([
+        'user_id' => Auth::user()->id,
+        'group_id' => $arisanGroups->id,
+    ]);
 
         return response()->json([
             'status' => 'success',
@@ -72,6 +82,67 @@ class ArisanGroupController extends Controller
             'data' => $arisanGroups
         ], 201);
     }
+
+    public function joinByCode(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string|exists:arisan_groups,code',
+        ]);
+
+        // Cari group berdasarkan kode
+        $group = arisan_group::where('code', $request->code)->firstOrFail();
+
+        // Cek apakah user sudah join
+        $alreadyJoined = arisan_participant::where('user_id', $request->user()->id)
+            ->where('group_id', $group->id)
+            ->exists();
+
+        if ($alreadyJoined) {
+            return response()->json([
+                'status' => 'erros',
+                'message' => 'Kamu sudah join ke grup ini.',
+            ], 409);
+        }
+
+        // Tambahkan ke tabel arisan_participants
+        arisan_participant::create([
+            'user_id' => $request->user()->id,
+            'group_id' => $group->id,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Berhasil join grup arisan',
+            'group' => $group,
+        ]);
+    }
+
+    public function saveContractAddress(Request $request, $id)
+    {
+        $request->validate([
+            'contract_address' => 'required|string',
+        ]);
+
+        $group = arisan_group::findOrFail($id);
+
+        // Otorisasi: hanya peserta yang terdaftar yang boleh update
+        if (!$group->users->contains($request->user()->id)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+
+        $group->contract_address = $request->contract_address;
+        $group->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Contract address saved',
+            'group' => $group,
+        ]);
+    }
+
 
     /**
      * Display the specified resource.

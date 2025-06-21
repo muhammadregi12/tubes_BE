@@ -12,4 +12,6 @@ class arisan_group extends Model
     {
         return $this->hasMany(arisan_participant::class);
     }
+
+    
 }

@@ -14,17 +14,13 @@ class GroupSeeder extends Seeder
     public function run(): void
     {
         arisan_group::create([
+            'user_id' => 1,
             'name' => 'arisan bulanan',
+            'code' => 12345,
             'amount' => '10000',
             'start_date' => '2025-07-07',
-            'duration' => '12 Bulan',
+            'duration' => '3 Bulan',
         ]);
 
-        arisan_group::create([
-            'name' => 'arisan harian',
-            'amount' => '10000',
-            'start_date' => '2025-07-07',
-            'duration' => '12 Bulan',
-        ]);
     }
 }
