@@ -83,28 +83,21 @@ class ArisanGroupController extends Controller
         ], 201);
     }
 
-    public function joinByCode(Request $request)
+    public function joinById($groupId, Request $request)
     {
-        $request->validate([
-            'code' => 'required|string|exists:arisan_groups,code',
-        ]);
+        $group = arisan_group::findOrFail($groupId);
 
-        // Cari group berdasarkan kode
-        $group = arisan_group::where('code', $request->code)->firstOrFail();
-
-        // Cek apakah user sudah join
         $alreadyJoined = arisan_participant::where('user_id', $request->user()->id)
             ->where('group_id', $group->id)
             ->exists();
 
         if ($alreadyJoined) {
             return response()->json([
-                'status' => 'erros',
+                'status' => 'error',
                 'message' => 'Kamu sudah join ke grup ini.',
             ], 409);
         }
 
-        // Tambahkan ke tabel arisan_participants
         arisan_participant::create([
             'user_id' => $request->user()->id,
             'group_id' => $group->id,
@@ -116,6 +109,7 @@ class ArisanGroupController extends Controller
             'group' => $group,
         ]);
     }
+
 
     public function saveContractAddress(Request $request, $id)
     {
@@ -213,4 +207,21 @@ class ArisanGroupController extends Controller
             'message' => 'Category deleted successfully'
         ], 200);
     }
+
+    public function viewArisan(Request $request)
+    {
+        $perPage = $request->input('per_page', 10);
+        $search = $request->input('search');
+
+        $query = arisan_group::query();
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $arisan = $query->paginate($perPage);
+
+        return response()->json($arisan, 200);
+    }
+
 }

@@ -13,5 +13,12 @@ class arisan_group extends Model
         return $this->hasMany(arisan_participant::class);
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'arisan_participants', 'group_id', 'user_id');
+    }
+
+
+
     
 }

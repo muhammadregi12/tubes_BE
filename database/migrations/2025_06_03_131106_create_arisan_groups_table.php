@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->string('duration');
             $table->date('end_date')->nullable();
+            $table->string('contract_address')->nullable();
             $table->timestamps();
         });
     }

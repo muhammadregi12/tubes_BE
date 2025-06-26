@@ -12,13 +12,19 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/arisan', [ArisanGroupController::class, 'viewArisan']);
+
+
 Route::middleware('auth:sanctum')->group(function(){
+    Route::post('/arisanGroup/{id}/join', [ArisanGroupController::class, 'joinById']);
+    Route::resource('/arisanGroup', ArisanGroupController::class);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::resource('/arisanGroup', ArisanGroupController::class);
-    Route::post('/joinArisan', [ArisanGroupController::class, 'joinByCode']);
+    
 
     // contrack addres
-    Route::post('/arisan-groups/{id}/save-contract', [ArisanGroupController::class, 'saveContractAddress']);
+    // Route::post('/arisan-groups/{id}/save-contract', [ArisanGroupController::class, 'saveContractAddress']);
+    Route::post('/arisanGroup/{id}/contract-address', [ArisanGroupController::class, 'saveContractAddress']);
+
 });
 
