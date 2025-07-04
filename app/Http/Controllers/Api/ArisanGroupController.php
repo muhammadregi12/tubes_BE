@@ -292,6 +292,14 @@ class ArisanGroupController extends Controller
             'draw_date' => 'required|date',
         ]);
 
+        // hitung peserta & jumlah draw
+        $participants = DB::table('arisan_participants')->where('group_id', $groupId)->count();
+        $totalDraws = DB::table('arisan_draws')->where('group_id', $groupId)->count();
+
+        if ($totalDraws >= $participants) {
+            return response()->json(['message' => 'Arisan sudah selesai'], 400);
+        }
+
         DB::table('arisan_draws')->insert([
             'group_id' => $groupId,
             'draw_number' => $request->draw_number,
@@ -304,14 +312,18 @@ class ArisanGroupController extends Controller
         return response()->json(['message' => 'Hasil draw berhasil dicatat']);
     }
 
+
     public function getNextDrawNumber($groupId)
     {
         $lastDraw = DB::table('arisan_draws')
             ->where('group_id', $groupId)
             ->max('draw_number');
 
-        return $lastDraw ? $lastDraw + 1 : 1;
+        $next = $lastDraw ? $lastDraw + 1 : 1;
+
+        return response()->json(['next_draw_number' => $next]);
     }
+
 
     
 

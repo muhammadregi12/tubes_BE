@@ -4,7 +4,10 @@ pragma solidity ^0.8.20;
 contract Arisan {
     address public admin;
     address[] public participants;
+
     mapping(address => bool) public hasPaid;
+    mapping(address => bool) public hasWon;
+
     address public lastWinner;
 
     uint public round = 1;
@@ -38,11 +41,29 @@ contract Arisan {
         require(allPaid(), "Belum semua bayar");
         require(block.timestamp >= lastDrawTime + drawInterval, "Belum waktunya draw");
 
-        uint winnerIndex = uint(
-            keccak256(abi.encodePacked(block.timestamp, block.prevrandao, round))
-        ) % participants.length;
+        uint eligibleCount = 0;
+        for (uint i = 0; i < participants.length; i++) {
+            if (!hasWon[participants[i]]) {
+                eligibleCount++;
+            }
+        }
+        require(eligibleCount > 0, "Arisan selesai, semua sudah menang");
 
-        lastWinner = participants[winnerIndex];
+        uint winnerIndex;
+        address winner;
+
+        // pilih secara acak yang belum pernah menang
+        do {
+            winnerIndex = uint(
+                keccak256(abi.encodePacked(block.timestamp, block.prevrandao, round))
+            ) % participants.length;
+
+            winner = participants[winnerIndex];
+        } while (hasWon[winner]);
+
+        lastWinner = winner;
+        hasWon[winner] = true;
+
         payable(lastWinner).transfer(address(this).balance);
 
         // reset pembayaran untuk ronde berikutnya
@@ -77,6 +98,25 @@ contract Arisan {
             return 0;
         }
         return (lastDrawTime + drawInterval) - block.timestamp;
+    }
+
+    function getEligibleParticipants() public view returns (address[] memory) {
+        uint count = 0;
+        for (uint i = 0; i < participants.length; i++) {
+            if (!hasWon[participants[i]]) {
+                count++;
+            }
+        }
+
+        address[] memory eligible = new address[](count);
+        uint j = 0;
+        for (uint i = 0; i < participants.length; i++) {
+            if (!hasWon[participants[i]]) {
+                eligible[j] = participants[i];
+                j++;
+            }
+        }
+        return eligible;
     }
 
     receive() external payable {
