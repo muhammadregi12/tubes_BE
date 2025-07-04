@@ -25,6 +25,11 @@ class User extends Authenticatable
         return $this->hasMany(arisan_participant::class);
     }
 
+    public function joinedGroups()
+    {
+        return $this->belongsToMany(arisan_group::class, 'arisan_participants', 'user_id', 'group_id');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

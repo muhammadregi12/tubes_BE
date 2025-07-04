@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('group_id')->constrained('arisan_groups')->onDelete('cascade');
+            $table->boolean('has_paid')->nullable();
+            $table->string('current_drawer')->nullable();
+            $table->string('user_wallet')->nullable();
             $table->timestamps();
         });
     }

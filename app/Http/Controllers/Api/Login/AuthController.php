@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Login;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -17,6 +18,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'sometimes|in:admin,peserta',
+            'wallet_address' => 'nullable|string|',
         ]);
 
         if ($validator->fails()) {
@@ -31,6 +33,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role ?? 'peserta',
+            'wallet_address' => $request->wallet_address,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -87,4 +90,16 @@ class AuthController extends Controller
             'message' => 'Logged out successfully',
         ]);
     }
+
+    public function getByWallet($address)
+    {
+        $user = DB::table('users')->where('wallet_address', strtolower($address))->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
+
+        return response()->json($user);
+    }
+
 }

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('duration');
             $table->date('end_date')->nullable();
             $table->string('contract_address')->nullable();
+            $table->string('current_drawer_user_id')->nullable();
             $table->timestamps();
         });
     }

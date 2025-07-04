@@ -8,6 +8,7 @@ use App\Models\arisan_participant;
 // use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ArisanGroupController extends Controller
@@ -69,6 +70,7 @@ class ArisanGroupController extends Controller
         $arisanGroups->start_date = $request->start_date;
         $arisanGroups->end_date = $request->end_date;
         $arisanGroups->user_id = Auth::user()->id;
+        $arisanGroups->current_drawer_user_id = Auth::user()->id;
         $arisanGroups->save();
 
         arisan_participant::create([
@@ -223,5 +225,96 @@ class ArisanGroupController extends Controller
 
         return response()->json($arisan, 200);
     }
+
+
+    public function myGroups(Request $request)
+    {
+        $user = auth()->user();
+
+        $groups = DB::table('arisan_participants')
+            ->join('arisan_groups', 'arisan_participants.group_id', '=', 'arisan_groups.id')
+            ->join('users as drawer', 'arisan_groups.current_drawer_user_id', '=', 'drawer.id')
+            ->join('users as participant', 'arisan_participants.user_id', '=', 'participant.id')
+            ->where('arisan_participants.user_id', $user->id)
+            ->select(
+                'arisan_groups.*',
+                'arisan_participants.has_paid as has_paid',
+                'drawer.wallet_address as current_drawer',
+                'participant.wallet_address as user_wallet'
+            )
+            ->paginate(10);
+
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $groups->items(),
+            'meta' => [
+                'current_page' => $groups->currentPage(),
+                'last_page' => $groups->lastPage(),
+                'per_page' => $groups->perPage(),
+                'total' => $groups->total(),
+            ]
+        ]);
+    }
+
+
+    public function pay($groupId)
+    {
+        $userId = auth()->id();
+
+        $participant = DB::table('arisan_participants')
+            ->where('user_id', $userId)
+            ->where('group_id', $groupId)
+            ->first();
+
+        if (!$participant) {
+            return response()->json(['message' => 'Kamu belum join grup ini'], 404);
+        }
+
+        if ($participant->has_paid) {
+            return response()->json(['message' => 'Kamu sudah membayar arisan.'], 400);
+        }
+
+        DB::table('arisan_participants')
+            ->where('user_id', $userId)
+            ->where('group_id', $groupId)
+            ->update(['has_paid' => true]);
+
+        return response()->json(['message' => 'Pembayaran berhasil']);
+    }
+
+
+    public function recordDraw(Request $request, $groupId)
+    {
+        $request->validate([
+            'winner_id' => 'required|exists:users,id',
+            'draw_number' => 'required|integer',
+            'draw_date' => 'required|date',
+        ]);
+
+        DB::table('arisan_draws')->insert([
+            'group_id' => $groupId,
+            'draw_number' => $request->draw_number,
+            'winner_id' => $request->winner_id,
+            'draw_date' => $request->draw_date,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Hasil draw berhasil dicatat']);
+    }
+
+    public function getNextDrawNumber($groupId)
+    {
+        $lastDraw = DB::table('arisan_draws')
+            ->where('group_id', $groupId)
+            ->max('draw_number');
+
+        return $lastDraw ? $lastDraw + 1 : 1;
+    }
+
+    
+
+
 
 }
