@@ -21,7 +21,7 @@ class ArisanGroupController extends Controller
         $perPage = $request->input('per_page', 10);
         $search = $request->input('search');
 
-        $query = arisan_group::query();
+        $query = arisan_group::query()->withCount('participants');;
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
@@ -103,6 +103,7 @@ class ArisanGroupController extends Controller
         arisan_participant::create([
             'user_id' => $request->user()->id,
             'group_id' => $group->id,
+            'joined' => 1,
         ]);
 
         return response()->json([

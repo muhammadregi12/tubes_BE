@@ -8,9 +8,9 @@ class arisan_group extends Model
 {
     protected $guarded = [];
 
-    public function participants()
+   public function participants()
     {
-        return $this->hasMany(arisan_participant::class);
+        return $this->hasMany(arisan_participant::class, 'group_id');
     }
 
     public function users()

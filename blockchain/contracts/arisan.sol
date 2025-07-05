@@ -28,7 +28,7 @@ contract Arisan {
     }
 
     function join() public {
-        require(!isParticipant(msg.sender), "Sudah join");
+        require(!isParticipant(msg.sender), "Kamu Sudah Join");
         participants.push(msg.sender);
     }
 
